@@ -32,6 +32,15 @@ EventLoop::EventLoop() {
     _loop_thread = std::thread([this]() { uv_run(this->_loop.get(), UV_RUN_DEFAULT); });
 }
 
+EventLoop::EventLoop(LoopSPtr loop) {
+    _loop = loop;
+
+    _event_async = _create_uv_async(_event_callback);
+    _stop_async = _create_uv_async(_stop_callback);
+
+    _loop_thread = std::thread([this]() { uv_run(this->_loop.get(), UV_RUN_DEFAULT); });
+}
+
 EventLoop::~EventLoop() {
     stop();
 }
@@ -271,7 +280,7 @@ EventLoop::UvAsyncUPtr EventLoop::_create_uv_async(AsyncCallback callback) {
     return uv_async;
 }
 
-EventLoop::LoopUPtr EventLoop::_create_event_loop() const {
+EventLoop::LoopSPtr EventLoop::_create_event_loop() const {
     auto *loop = new uv_loop_t;
     auto err = uv_loop_init(loop);
     if (err != 0) {
@@ -279,7 +288,7 @@ EventLoop::LoopUPtr EventLoop::_create_event_loop() const {
         throw Error("failed to initialize event loop: " + _err_msg(err));
     }
 
-    return LoopUPtr(loop);
+    return LoopSPtr(loop);
 }
 
 }

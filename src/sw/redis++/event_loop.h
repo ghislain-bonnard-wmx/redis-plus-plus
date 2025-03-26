@@ -36,6 +36,7 @@ class AsyncEvent;
 class EventLoop {
 public:
     EventLoop();
+    EventLoop(std::shared_ptr<uv_loop_t> loop);
 
     EventLoop(const EventLoop &) = delete;
     EventLoop& operator=(const EventLoop &) = delete;
@@ -67,13 +68,13 @@ private:
         void operator()(uv_loop_t *loop) const;
     };
 
-    using LoopUPtr = std::unique_ptr<uv_loop_t, LoopDeleter>;
+    using LoopSPtr = std::shared_ptr<uv_loop_t>;
 
     std::string _err_msg(int err) const {
         return uv_strerror(err);
     }
 
-    LoopUPtr _create_event_loop() const;
+    LoopSPtr _create_event_loop() const;
 
     using UvAsyncUPtr = std::unique_ptr<uv_async_t>;
 
@@ -108,7 +109,7 @@ private:
     std::unordered_set<std::shared_ptr<AsyncConnection>> _command_events;
 
     // _loop must be defined at last, since its destructor needs other data members.
-    LoopUPtr _loop;
+    LoopSPtr _loop;
 
     bool _stopped{false};
 };
